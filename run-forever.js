@@ -22,7 +22,7 @@ if (process.argv[2] && argv.logFile) {
 
 	// à chaque restart
 	child.on('restart', function (err) {
-		console.log('error : consulter le fichier log ' + argv.logFile);
+		console.log('error server ' + process.argv[2] + ' : consultez le fichier log ' + argv.logFile);
 
 		var transporter = nodemailer.createTransport(sendmailTransport({
 		    path: 'sendmail',
@@ -34,7 +34,7 @@ if (process.argv[2] && argv.logFile) {
 		    from: config.sender,
 		    to: config.admin,
 		    subject: 'Error node server',
-		    text: 'Une erreur est survenue sur le serveur, consultez les logs dans : ' + argv.logFile,
+		    text: 'Une erreur est survenue sur le serveur ' + process.argv[2] + ', consultez les logs dans : ' + argv.logFile,
 		    replyTo: config.noreplyAddress,
 		}, function (err) {
 			if (err) {

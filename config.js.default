@@ -1,0 +1,14 @@
+'use strict';
+
+var config = {
+    port: 8080,
+    db: {
+    },
+    corsOrigin: '*',
+    sender: '',
+    admin: '',
+
+
+};
+
+module.exports = config;

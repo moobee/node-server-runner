@@ -1,3 +1,5 @@
+#!/bin/env node
+
 'use strict';
 
 var NodeServerRunner = require('../index.js');
@@ -14,4 +16,3 @@ if (!serverFile || !argv.logFile || !argv.adminMail) {
 var serverRunner = new NodeServerRunner(serverFile, argv.logFile, argv.adminMail);
 
 serverRunner.start();
-

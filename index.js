@@ -1,17 +1,10 @@
 'use strict';
 
-var config = require('./config.js');
-
 var forever = require('forever');
 var monitor = require('forever-monitor');
 
 var nodemailer = require('nodemailer');
 var sendmailTransport = require('nodemailer-sendmail-transport');
-
-var argv = require('minimist')(process.argv.slice(2));
-
-var loopRestartCount = 0;
-var lastCrashTime;
 
 var transporter = nodemailer.createTransport(sendmailTransport({
     path: 'sendmail',
@@ -26,7 +19,7 @@ var sendMail = function (subject, text) {
     // envoi du mail a l'admin
     transporter.sendMail({
         from: 'error@node-server-runner.com',
-        to: config.admin,
+        to: 'v.kayser@moobee.fr',
         subject: subject,
         text: text,
     }, function (err) {
@@ -36,53 +29,77 @@ var sendMail = function (subject, text) {
     });
 };
 
+var NodeServerRunner = function (serverFile, logFile, maxRestartCount, minTimeBetweenCrashes) {
+    this.serverFile = serverFile;
+    this.logFile = logFile;
+    this.maxRestartCount = maxRestartCount || 5;
+    this.minTimeBetweenCrashes = minTimeBetweenCrashes || 6000;
+};
 
-// si la ligne de commande a été lancée avec le nom du fichier du server avec le nom du fichier de log
-if (process.argv[2] && argv.logFile) {
+NodeServerRunner.prototype = {
 
-    var child = new (monitor.Monitor)(process.argv[2], {
-        silent: true,
-        args: [],
-        errFile: argv.logFile, // logs
-        killTree: true,
-    });
+    constructor: NodeServerRunner,
 
-    console.log('Start server ...');
+    serverFile: null,
+    logFile: null,
+    maxRestartCount: null,
+    minTimeBetweenCrashes: null,
+    loopRestartCount: 0,
+    lastCrashTime: null,
 
-    // à chaque restart
-    child.on('restart', function () {
+    start: function () {
 
-        var currentTime = new Date().getTime();
+        console.log('Lancement du serveur ' + this.serverFile + '. Les logs seront enregistrés dans ' + this.logFile);
+        console.log('Le serveur se relancera s\'il crash ' + this.maxRestartCount + ' fois (avec moins de ' + this.minTimeBetweenCrashes + 'ms d\'intervale)');
+        console.log('Les mails d\'erreur seront envoyés à ' + this.adminEmail + '.');
 
-        var timeFromLastCrash = lastCrashTime ? currentTime - lastCrashTime : 0;
+        var child = new (monitor.Monitor)(this.serverFile, {
+            silent: true,
+            args: [],
+            errFile: this.logFile, // logs
+            killTree: true,
+        });
 
-        console.log('Précédent crash il y a : ' + timeFromLastCrash + 'ms');
+        forever.startServer(child);
 
-        if (!lastCrashTime || timeFromLastCrash <= config.minTimeBetweenCrashes) {
-            loopRestartCount++;
-        }
-        else {
-            loopRestartCount = 1;
-        }
-        console.log('Le serveur a crashé ' + loopRestartCount + ' fois de suite.');
+        child.start();
 
-        if (loopRestartCount >= config.maxRestartCount) {
-            sendMail('Le serveur a crashé', 'Le serveur crashait en boucle et a été définitivement arrêté après ' + config.maxRestartCount + ' crashs');
-            process.exit();
-        }
+        // à chaque restart
+        child.on('restart', function () {
 
-        lastCrashTime = currentTime;
+            var currentTime = new Date().getTime();
 
-        sendMail('Le serveur a redémarré', 'Une erreur est survenue sur le serveur ' + process.argv[2] + ', consultez les logs dans : ' + argv.logFile);
+            var timeFromLastCrash = this.lastCrashTime ? currentTime - this.lastCrashTime : 0;
 
-        console.log('error server ' + process.argv[2] + ' : consultez le fichier log ' + argv.logFile);
+            console.log('Précédent crash il y a : ' + timeFromLastCrash + 'ms');
 
-    });
+            if (!this.lastCrashTime || timeFromLastCrash <= this.minTimeBetweenCrashes) {
+                this.loopRestartCount++;
+            }
+            else {
+                this.loopRestartCount = 1;
+            }
+            console.log('Le serveur a crashé ' + this.loopRestartCount + ' fois de suite.');
 
-    forever.startServer(child);
+            if (this.loopRestartCount >= this.maxRestartCount) {
+                sendMail('Le serveur a crashé', 'Le serveur crashait en boucle et a été définitivement arrêté après ' + this.maxRestartCount + ' crashs');
+                process.exit();
+            }
 
-    child.start();
-}
-else {
-    console.log('Arguments manquants\nUtilisez : node run-forever.js path/to/mon-fichier.js --logFile  path/to/fichierLog.log');
-}
+            this.lastCrashTime = currentTime;
+
+            sendMail('Le serveur a redémarré', 'Une erreur est survenue sur le serveur ' + this.serverFile + ', consultez les logs dans : ' + this.logFile);
+
+            return console.log('error server ' + this.serverFile + ' : consultez le fichier log ' + this.logFile);
+
+        }.bind(this));
+
+        console.log('Start server ...');
+
+    },
+};
+
+module.exports = NodeServerRunner;
+
+
+

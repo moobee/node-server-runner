@@ -1,0 +1,19 @@
+'use strict';
+
+var NodeServerRunner = require('../index.js');
+
+var argv = require('minimist')(process.argv.slice(2));
+
+var serverFile = argv._[0];
+
+console.log(serverFile, argv.logFile);
+
+// si la ligne de commande a été lancée avec le nom du fichier du server avec le nom du fichier de log
+if (!serverFile || !argv.logFile) {
+	return console.log('Arguments manquants\nUtilisez : node run-forever.js path/to/mon-fichier.js --logFile  path/to/fichierLog.log');
+}
+
+var serverRunner = new NodeServerRunner(serverFile, argv.logFile);
+
+serverRunner.start();
+

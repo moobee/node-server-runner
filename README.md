@@ -28,3 +28,12 @@ Il est possible de passer des paramètres optionnels au runner :
 # Temps minimum en millisecondes entre deux crash pour que ceux-ci soient considérés comme "consécutifs"
 --minCrashDelay <timems>
 ```
+
+__Détacher le processus du terminal__
+
+Pour détacher le processus du shell (et éviter qu'il ne soit tué quand le terminal est fermé ou la
+session SSH quittée), il est possible d'utiliser nohup :
+
+```bash
+nohup <ma-commande> > /dev/null 2>&1 &
+```

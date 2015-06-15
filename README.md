@@ -5,17 +5,26 @@ afin qu'il envoie un mail à un administrateur en cas de crash.
 
 ### Installation
 
+```
+sudo npm install -g node-server-runner
+```
 
-Depuis la racine du projet :
+### Utilisation
 
-- Copier le fichier de config :
 
-   ```
-   cp config.js.default config.js && nano config.js
-   ```
+```
+node-server-runner /path/to/my/server/server.js --logFile /path/to/log/file/serverLogs.log --adminMail example@admin.com
+```
 
-- Installer les dépendances :
+Il est possible de passer des paramètres optionnels au runner :
 
-   ```
-   npm install
-   ```
+```bash
+# uid utilisé pour identifier le serveur dans forever
+--uid <mon-uid>
+
+# Nombre maximum de reboot consécutif du serveur autorisés
+--maxCrash <number>
+
+# Temps minimum en millisecondes entre deux crash pour que ceux-ci soient considérés comme "consécutifs"
+--minCrashDelay <timems>
+```

@@ -29,10 +29,11 @@ var sendMail = function (subject, text, receiver) {
     });
 };
 
-var NodeServerRunner = function (serverFile, logFile, adminMail, maxRestartCount, minTimeBetweenCrashes) {
+var NodeServerRunner = function (serverFile, logFile, adminMail, uid, maxRestartCount, minTimeBetweenCrashes) {
     this.serverFile = serverFile;
     this.logFile = logFile;
     this.adminMail = adminMail;
+    this.uid = uid;
     this.maxRestartCount = maxRestartCount || 5;
     this.minTimeBetweenCrashes = minTimeBetweenCrashes || 6000;
 };
@@ -57,6 +58,7 @@ NodeServerRunner.prototype = {
 
         var child = new (monitor.Monitor)(this.serverFile, {
             silent: true,
+            uid: this.uid,
             args: [],
             errFile: this.logFile, // logs
             killTree: true,

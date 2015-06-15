@@ -2,7 +2,8 @@
 
 var config = require('./config.js');
 
-var forever = require('forever-monitor');
+var forever = require('forever');
+var monitor = require('forever-monitor');
 
 var nodemailer = require('nodemailer');
 var sendmailTransport = require('nodemailer-sendmail-transport');
@@ -39,7 +40,7 @@ var sendMail = function (subject, text) {
 // si la ligne de commande a été lancée avec le nom du fichier du server avec le nom du fichier de log
 if (process.argv[2] && argv.logFile) {
 
-    var child = new (forever.Monitor)(process.argv[2], {
+    var child = new (monitor.Monitor)(process.argv[2], {
         silent: true,
         args: [],
         errFile: argv.logFile, // logs
@@ -77,6 +78,8 @@ if (process.argv[2] && argv.logFile) {
         console.log('error server ' + process.argv[2] + ' : consultez le fichier log ' + argv.logFile);
 
     });
+
+    forever.startServer(child);
 
     child.start();
 }

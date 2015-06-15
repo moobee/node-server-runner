@@ -9,6 +9,7 @@
   "author": "",
   "license": "BSD-2-Clause",
   "dependencies": {
+    "forever": "^0.14.1",
     "forever-monitor": "~1.5.2",
     "minimist": "~1.1.1",
     "nodemailer": "~1.3.4",

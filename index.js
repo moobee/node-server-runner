@@ -14,12 +14,12 @@ var transporter = nodemailer.createTransport(sendmailTransport({
 /**
  * Envoie un mail à l'admin du serveur
  */
-var sendMail = function (subject, text) {
+var sendMail = function (subject, text, receiver) {
 
     // envoi du mail a l'admin
     transporter.sendMail({
         from: 'error@node-server-runner.com',
-        to: 'v.kayser@moobee.fr',
+        to: receiver,
         subject: subject,
         text: text,
     }, function (err) {
@@ -29,9 +29,10 @@ var sendMail = function (subject, text) {
     });
 };
 
-var NodeServerRunner = function (serverFile, logFile, maxRestartCount, minTimeBetweenCrashes) {
+var NodeServerRunner = function (serverFile, logFile, adminMail, maxRestartCount, minTimeBetweenCrashes) {
     this.serverFile = serverFile;
     this.logFile = logFile;
+    this.adminMail = adminMail;
     this.maxRestartCount = maxRestartCount || 5;
     this.minTimeBetweenCrashes = minTimeBetweenCrashes || 6000;
 };
@@ -42,6 +43,7 @@ NodeServerRunner.prototype = {
 
     serverFile: null,
     logFile: null,
+    adminMail: null,
     maxRestartCount: null,
     minTimeBetweenCrashes: null,
     loopRestartCount: 0,
@@ -82,13 +84,13 @@ NodeServerRunner.prototype = {
             console.log('Le serveur a crashé ' + this.loopRestartCount + ' fois de suite.');
 
             if (this.loopRestartCount >= this.maxRestartCount) {
-                sendMail('Le serveur a crashé', 'Le serveur crashait en boucle et a été définitivement arrêté après ' + this.maxRestartCount + ' crashs');
+                sendMail('Le serveur a crashé', 'Le serveur crashait en boucle et a été définitivement arrêté après ' + this.maxRestartCount + ' crashs', this.adminMail);
                 process.exit();
             }
 
             this.lastCrashTime = currentTime;
 
-            sendMail('Le serveur a redémarré', 'Une erreur est survenue sur le serveur ' + this.serverFile + ', consultez les logs dans : ' + this.logFile);
+            sendMail('Le serveur a redémarré', 'Une erreur est survenue sur le serveur ' + this.serverFile + ', consultez les logs dans : ' + this.logFile, this.adminMail);
 
             return console.log('error server ' + this.serverFile + ' : consultez le fichier log ' + this.logFile);
 

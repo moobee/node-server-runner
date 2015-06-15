@@ -3,6 +3,7 @@
 var config = {
     admin: '',
     maxRestartCount: 5,
+    minTimeBetweenCrashes: 5000,
 };
 
 module.exports = config;

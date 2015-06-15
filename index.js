@@ -53,7 +53,7 @@ NodeServerRunner.prototype = {
 
         console.log('Lancement du serveur ' + this.serverFile + '. Les logs seront enregistrés dans ' + this.logFile);
         console.log('Le serveur se relancera s\'il crash ' + this.maxRestartCount + ' fois (avec moins de ' + this.minTimeBetweenCrashes + 'ms d\'intervale)');
-        console.log('Les mails d\'erreur seront envoyés à ' + this.adminEmail + '.');
+        console.log('Les mails d\'erreur seront envoyés à ' + this.adminMail + '.');
 
         var child = new (monitor.Monitor)(this.serverFile, {
             silent: true,
@@ -102,6 +102,3 @@ NodeServerRunner.prototype = {
 };
 
 module.exports = NodeServerRunner;
-
-
-

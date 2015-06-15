@@ -67,6 +67,12 @@ NodeServerRunner.prototype = {
             killTree: true,
         });
 
+        // Tag en début de mail
+        var tag = this.uid ? '[ ' + this.uid + ' ] ' : '';
+        // Infos du serveur
+        var serverInfos = '\n\n- uid : ' + this.uid + '\n- fichier : ' + this.serverFile + '\n- logs : ' + this.logFile;
+
+
         forever.startServer(child);
 
         child.start();
@@ -89,14 +95,14 @@ NodeServerRunner.prototype = {
             console.log('Le serveur a crashé ' + this.loopRestartCount + ' fois de suite.');
 
             if (this.loopRestartCount >= this.maxRestartCount) {
-                sendMail('Le serveur a crashé', 'Le serveur crashait en boucle et a été définitivement arrêté après ' + this.maxRestartCount + ' crashs', this.adminMail, function () {
+                sendMail(tag + 'Le serveur a crashé', 'Le serveur (' + this.uid + ') crashait en boucle et a été définitivement arrêté après ' + this.maxRestartCount + ' crashs.' + serverInfos, this.adminMail, function () {
                     process.exit();
                 });
             }
 
             this.lastCrashTime = currentTime;
 
-            sendMail('Le serveur a redémarré', 'Une erreur est survenue sur le serveur ' + this.serverFile + ', consultez les logs dans : ' + this.logFile, this.adminMail);
+            sendMail(tag + 'Le serveur a redémarré', 'Une erreur est survenue sur le serveur et celui-ci a dû redémarrer.\nVous pouvez voir l\'erreur en question dans le fichier de logs.' + serverInfos, this.adminMail);
 
             return console.log('error server ' + this.serverFile + ' : consultez le fichier log ' + this.logFile);
 

@@ -1,6 +1,6 @@
 {
   "name": "node-server-runner",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "node-server-runner permet de lancer un process node en tâche de fond (avec forever) afin qu'il envoie un mail à un administrateur en cas de crash.",
   "main": "index.js",
   "bin": {

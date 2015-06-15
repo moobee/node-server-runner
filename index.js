@@ -14,7 +14,9 @@ var transporter = nodemailer.createTransport(sendmailTransport({
 /**
  * Envoie un mail à l'admin du serveur
  */
-var sendMail = function (subject, text, receiver) {
+var sendMail = function (subject, text, receiver, done) {
+
+    done = done || function () {};
 
     // envoi du mail a l'admin
     transporter.sendMail({
@@ -26,6 +28,7 @@ var sendMail = function (subject, text, receiver) {
         if (err) {
             console.log(err);
         }
+        done();
     });
 };
 
@@ -86,8 +89,9 @@ NodeServerRunner.prototype = {
             console.log('Le serveur a crashé ' + this.loopRestartCount + ' fois de suite.');
 
             if (this.loopRestartCount >= this.maxRestartCount) {
-                sendMail('Le serveur a crashé', 'Le serveur crashait en boucle et a été définitivement arrêté après ' + this.maxRestartCount + ' crashs', this.adminMail);
-                process.exit();
+                sendMail('Le serveur a crashé', 'Le serveur crashait en boucle et a été définitivement arrêté après ' + this.maxRestartCount + ' crashs', this.adminMail, function () {
+                    process.exit();
+                });
             }
 
             this.lastCrashTime = currentTime;

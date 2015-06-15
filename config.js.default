@@ -1,14 +1,8 @@
 'use strict';
 
 var config = {
-    port: 8080,
-    db: {
-    },
-    corsOrigin: '*',
-    sender: '',
     admin: '',
-
-
+    maxRestartCount: 5,
 };
 
 module.exports = config;

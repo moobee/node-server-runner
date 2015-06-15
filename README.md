@@ -5,46 +5,26 @@ afin qu'il envoie un mail à un administrateur en cas de crash.
 
 ### Installation
 
-
-Depuis la racine du projet :
-
-- Copier le fichier de config :
-
-   ```
-   cp config.js.default config.js && nano config.js
-   ```
-
-- Installer les dépendances :
-
-   ```
-   npm install
-   ```
-- Installer le package
-
-	```
-	sudo npm install -g node-server-runner
-	```
+```
+sudo npm install -g node-server-runner
+```
 
 ### Utilisation
 
-- Syntaxe
 
-	```
-	node-server-runner /path/to/my/server/server.js --logFile /path/to/log/file/serverLogs.log --adminMail example@admin.com
-	```
+```
+node-server-runner /path/to/my/server/server.js --logFile /path/to/log/file/serverLogs.log --adminMail example@admin.com
+```
 
-### Configuration
+Il est possible de passer des paramètres optionnels au runner :
 
-- Dans le module node-server-runner
+```bash
+# uid utilisé pour identifier le serveur dans forever
+--uid <mon-uid>
 
-	Le serveur peut s'arrêter définitivement au bout de n restart (5 par defaut : maxRestartCount) mais aussi si il y a t d'intervale entre deux erreurs (avec t à 6000 ms par défaut : minTimeBetweenCrashes)
+# Nombre maximum de reboot consécutif du serveur autorisés
+--maxCrash <number>
 
-	Pour overider ses paramètres, il faut les préciser dans le constructeur du serverRunner de cette manière :
-
-	```
-	var serverRunner = new NodeServerRunner(serverFile, argv.logFile, argv.adminMail, maxRestartCount, minTimeBetweenCrashes);
-	```
-
-
-
-
+# Temps minimum en millisecondes entre deux crash pour que ceux-ci soient considérés comme "consécutifs"
+--minCrashDelay <timems>
+```

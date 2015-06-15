@@ -1,0 +1,31 @@
+{
+  "name": "node-server-runner",
+  "version": "0.1.0",
+  "description": "node-server-runner permet de lancer un process node en tâche de fond (avec forever) afin qu'il envoie un mail à un administrateur en cas de crash.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "moobee",
+  "license": "MIT",
+  "dependencies": {
+    "forever": "^0.14.1",
+    "forever-monitor": "~1.5.2",
+    "minimist": "~1.1.1",
+    "nodemailer": "~1.3.4",
+    "nodemailer-sendmail-transport": "~1.0.0"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/moobee/node-server-runner.git"
+  },
+  "keywords": [
+    "node",
+    "runner"
+  ],
+  "bugs": {
+    "url": "https://github.com/moobee/node-server-runner/issues"
+  },
+  "homepage": "https://github.com/moobee/node-server-runner#readme"
+}

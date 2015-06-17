@@ -2,6 +2,8 @@
 
 var forever = require('forever');
 var monitor = require('forever-monitor');
+var moment = require('moment');
+moment.locale('fr');
 
 var nodemailer = require('nodemailer');
 var sendmailTransport = require('nodemailer-sendmail-transport');
@@ -14,28 +16,32 @@ var transporter = nodemailer.createTransport(sendmailTransport({
 /**
  * Envoie un mail à l'admin du serveur
  */
-var sendMail = function (subject, text, receiver, done) {
+var sendMail = function (subject, text, recipient, sender, done) {
 
     done = done || function () {};
 
-    // envoi du mail a l'admin
-    transporter.sendMail({
-        from: 'error@node-server-runner.com',
-        to: receiver,
+    var mailOptions = {
+        to: recipient,
         subject: subject,
         text: text,
-    }, function (err) {
-        if (err) {
-            console.log(err);
-        }
+    };
+
+    if (sender) {
+        mailOptions.from = sender;
+    }
+
+    // envoi du mail a l'admin
+    transporter.sendMail(mailOptions, function (err) {
+        if (err) { console.log(err); }
         done();
     });
 };
 
-var NodeServerRunner = function (serverFile, logFile, adminMail, uid, maxRestartCount, minTimeBetweenCrashes) {
+var NodeServerRunner = function (serverFile, logFile, adminMail, senderMail, uid, maxRestartCount, minTimeBetweenCrashes) {
     this.serverFile = serverFile;
     this.logFile = logFile;
     this.adminMail = adminMail;
+    this.senderMail = senderMail;
     this.uid = uid;
     this.maxRestartCount = maxRestartCount || 5;
     this.minTimeBetweenCrashes = minTimeBetweenCrashes || 6000;
@@ -52,6 +58,19 @@ NodeServerRunner.prototype = {
     minTimeBetweenCrashes: null,
     loopRestartCount: 0,
     lastCrashTime: null,
+    lastError: null,
+
+    _sendInfo: function (subject, text, done) {
+
+        done = done || function () {};
+
+        // Tag en début de mail
+        var tag = this.uid ? '[' + this.uid + '] ' : '';
+        // Infos du serveur
+        var serverInfos = '\n\n- uid : ' + this.uid + '\n- fichier : ' + this.serverFile + '\n- logs : ' + this.logFile;
+
+        sendMail(tag + subject, text + serverInfos, this.adminMail, this.senderMail, done);
+    },
 
     start: function () {
 
@@ -60,6 +79,7 @@ NodeServerRunner.prototype = {
         console.log('Les mails d\'erreur seront envoyés à ' + this.adminMail + '.');
 
         var child = new (monitor.Monitor)(this.serverFile, {
+            append: true,
             silent: true,
             uid: this.uid,
             args: [],
@@ -67,15 +87,19 @@ NodeServerRunner.prototype = {
             killTree: true,
         });
 
-        // Tag en début de mail
-        var tag = this.uid ? '[ ' + this.uid + ' ] ' : '';
-        // Infos du serveur
-        var serverInfos = '\n\n- uid : ' + this.uid + '\n- fichier : ' + this.serverFile + '\n- logs : ' + this.logFile;
-
-
         forever.startServer(child);
 
         child.start();
+
+        // On stocke la dernière erreur pour pouvoir l'envoyer par mail
+        child.on('stderr', function (data) {
+            var StringDecoder = require('string_decoder').StringDecoder;
+            var decoder = new StringDecoder('utf8');
+            this.lastError = {
+                output: decoder.write(data),
+                date: moment(),
+            };
+        }.bind(this));
 
         // à chaque restart
         child.on('restart', function () {
@@ -95,21 +119,32 @@ NodeServerRunner.prototype = {
             console.log('Le serveur a crashé ' + this.loopRestartCount + ' fois de suite.');
 
             if (this.loopRestartCount >= this.maxRestartCount) {
-                sendMail(tag + 'Le serveur a crashé', 'Le serveur (' + this.uid + ') crashait en boucle et a été définitivement arrêté après ' + this.maxRestartCount + ' crashs.' + serverInfos, this.adminMail, function () {
-                    process.exit();
-                });
+                this._sendInfo('Le serveur a crashé', 'Le serveur a été arrêté après ' +
+                    this.maxRestartCount + ' crashs consécutifs.',
+                    function () {
+                        process.exit();
+                    }
+                );
             }
 
             this.lastCrashTime = currentTime;
 
-            sendMail(tag + 'Le serveur a redémarré', 'Une erreur est survenue sur le serveur et celui-ci a dû redémarrer.\nVous pouvez voir l\'erreur en question dans le fichier de logs.' + serverInfos, this.adminMail);
+            var errorText = '';
+            if (this.lastError) {
+                errorText = '\nLa dernière erreur à s\'être produite est la suivante (' + this.lastError.date.fromNow() + ') :\n\n' +
+                    this.lastError.output + '\n\n';
+            }
 
-            return console.log('error server ' + this.serverFile + ' : consultez le fichier log ' + this.logFile);
+            this._sendInfo('Le serveur a redémarré', 'Le serveur a redémarré, peut-être ' +
+                'à cause d\'une erreur.\n' + errorText + 'Vous pouvez voir les autres erreurs ' +
+                'dans le fichier de logs.'
+            );
+
+            return console.log('Erreur du serveur ' + this.serverFile + ' : consultez le fichier log ' + this.logFile);
 
         }.bind(this));
 
         console.log('Start server ...');
-
     },
 };
 

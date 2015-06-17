@@ -73,6 +73,7 @@ NodeServerRunner.prototype = {
         console.log('Les mails d\'erreur seront envoyés à ' + this.adminMail + '.');
 
         var child = new (monitor.Monitor)(this.serverFile, {
+            append: true,
             silent: true,
             uid: this.uid,
             args: [],

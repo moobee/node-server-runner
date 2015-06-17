@@ -30,7 +30,7 @@ Il est possible de passer des paramètres optionnels au runner :
 --minCrashDelay <timems>
 
 # Adresse email de l'expéditeur du mail
---senderMail <email<
+--senderMail <email>
 ```
 
 __Détacher le processus du terminal__

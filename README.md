@@ -13,13 +13,14 @@ sudo npm install -g node-server-runner
 
 
 ```
+# Le fichier de log sera créé s'il n'existe pas.
 node-server-runner /path/to/my/server/server.js --logFile /path/to/log/file/serverLogs.log --adminMail example@admin.com
 ```
 
 Il est possible de passer des paramètres optionnels au runner :
 
 ```bash
-# uid utilisé pour identifier le serveur dans forever
+# uid utilisé pour identifier le serveur dans forever (visible avec forever list)
 --uid <mon-uid>
 
 # Nombre maximum de reboot consécutif du serveur autorisés

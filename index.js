@@ -75,7 +75,7 @@ NodeServerRunner.prototype = {
     start: function () {
 
         console.log('Lancement du serveur ' + this.serverFile + '. Les logs seront enregistrés dans ' + this.logFile);
-        console.log('Le serveur se relancera s\'il crash ' + this.maxRestartCount + ' fois (avec moins de ' + this.minTimeBetweenCrashes + 'ms d\'intervale)');
+        console.log('Le serveur s\'arrêtera définitivement s\'il crashe ' + this.maxRestartCount + ' fois (avec moins de ' + this.minTimeBetweenCrashes + 'ms d\'intervale)');
         console.log('Les mails d\'erreur seront envoyés à ' + this.adminMail + '.');
 
         var child = new (monitor.Monitor)(this.serverFile, {
@@ -136,7 +136,7 @@ NodeServerRunner.prototype = {
             }
 
             this._sendInfo('Le serveur a redémarré', 'Le serveur a redémarré, peut-être ' +
-                'à cause d\'une erreur.\n' + errorText + 'Vous pouvez voir les autres erreurs ' +
+                'à cause d\'une erreur.\n' + errorText + 'Vous pouvez voir toutes les erreurs ' +
                 'dans le fichier de logs.'
             );
 

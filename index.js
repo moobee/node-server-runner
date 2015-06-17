@@ -2,6 +2,8 @@
 
 var forever = require('forever');
 var monitor = require('forever-monitor');
+var moment = require('moment');
+moment.locale('fr');
 
 var nodemailer = require('nodemailer');
 var sendmailTransport = require('nodemailer-sendmail-transport');
@@ -85,8 +87,6 @@ NodeServerRunner.prototype = {
             killTree: true,
         });
 
-
-
         forever.startServer(child);
 
         child.start();
@@ -97,7 +97,7 @@ NodeServerRunner.prototype = {
             var decoder = new StringDecoder('utf8');
             this.lastError = {
                 output: decoder.write(data),
-                date: new Date(),
+                date: moment(),
             };
         }.bind(this));
 
@@ -131,8 +131,8 @@ NodeServerRunner.prototype = {
 
             var errorText = '';
             if (this.lastError) {
-                errorText = '\nLa dernière erreur à s\'être produite est la suivante :\n\n' +
-                    this.lastError.output + '\n\ndate: ' + this.lastError.date + '\n\n';
+                errorText = '\nLa dernière erreur à s\'être produite est la suivante (' + this.lastError.date.fromNow() + ') :\n\n' +
+                    this.lastError.output + '\n\n';
             }
 
             this._sendInfo('Le serveur a redémarré', 'Le serveur a redémarré, peut-être ' +

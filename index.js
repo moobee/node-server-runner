@@ -14,28 +14,32 @@ var transporter = nodemailer.createTransport(sendmailTransport({
 /**
  * Envoie un mail à l'admin du serveur
  */
-var sendMail = function (subject, text, receiver, done) {
+var sendMail = function (subject, text, recipient, sender, done) {
 
     done = done || function () {};
 
-    // envoi du mail a l'admin
-    transporter.sendMail({
-        from: 'error@node-server-runner.com',
-        to: receiver,
+    var mailOptions = {
+        to: recipient,
         subject: subject,
         text: text,
-    }, function (err) {
-        if (err) {
-            console.log(err);
-        }
+    };
+
+    if (sender) {
+        mailOptions.from = sender;
+    }
+
+    // envoi du mail a l'admin
+    transporter.sendMail(mailOptions, function (err) {
+        if (err) { console.log(err); }
         done();
     });
 };
 
-var NodeServerRunner = function (serverFile, logFile, adminMail, uid, maxRestartCount, minTimeBetweenCrashes) {
+var NodeServerRunner = function (serverFile, logFile, adminMail, senderMail, uid, maxRestartCount, minTimeBetweenCrashes) {
     this.serverFile = serverFile;
     this.logFile = logFile;
     this.adminMail = adminMail;
+    this.senderMail = senderMail;
     this.uid = uid;
     this.maxRestartCount = maxRestartCount || 5;
     this.minTimeBetweenCrashes = minTimeBetweenCrashes || 6000;
@@ -53,6 +57,15 @@ NodeServerRunner.prototype = {
     loopRestartCount: 0,
     lastCrashTime: null,
 
+    _sendInfo: function (subject, text, done) {
+        // Tag en début de mail
+        var tag = this.uid ? '[' + this.uid + '] ' : '';
+        // Infos du serveur
+        var serverInfos = '\n\n- uid : ' + this.uid + '\n- fichier : ' + this.serverFile + '\n- logs : ' + this.logFile;
+
+        sendMail(tag + subject, text + serverInfos, this.adminMail, this.senderMail, done);
+    },
+
     start: function () {
 
         console.log('Lancement du serveur ' + this.serverFile + '. Les logs seront enregistrés dans ' + this.logFile);
@@ -67,10 +80,6 @@ NodeServerRunner.prototype = {
             killTree: true,
         });
 
-        // Tag en début de mail
-        var tag = this.uid ? '[ ' + this.uid + ' ] ' : '';
-        // Infos du serveur
-        var serverInfos = '\n\n- uid : ' + this.uid + '\n- fichier : ' + this.serverFile + '\n- logs : ' + this.logFile;
 
 
         forever.startServer(child);
@@ -95,16 +104,16 @@ NodeServerRunner.prototype = {
             console.log('Le serveur a crashé ' + this.loopRestartCount + ' fois de suite.');
 
             if (this.loopRestartCount >= this.maxRestartCount) {
-                sendMail(tag + 'Le serveur a crashé', 'Le serveur (' + this.uid + ') crashait en boucle et a été définitivement arrêté après ' + this.maxRestartCount + ' crashs.' + serverInfos, this.adminMail, function () {
+                this._sendInfo('Le serveur a crashé', 'Le serveur crashait en boucle et a été définitivement arrêté après ' + this.maxRestartCount + ' crashs.', function () {
                     process.exit();
                 });
             }
 
             this.lastCrashTime = currentTime;
 
-            sendMail(tag + 'Le serveur a redémarré', 'Une erreur est survenue sur le serveur et celui-ci a dû redémarrer.\nVous pouvez voir l\'erreur en question dans le fichier de logs.' + serverInfos, this.adminMail);
+            this._sendInfo('Le serveur a redémarré', 'Le serveur a redémarré, peut-être à cause d\'une erreur.\nVous pouvez voir l\'erreur en question dans le fichier de logs.');
 
-            return console.log('error server ' + this.serverFile + ' : consultez le fichier log ' + this.logFile);
+            return console.log('Erreur du serveur ' + this.serverFile + ' : consultez le fichier log ' + this.logFile);
 
         }.bind(this));
 

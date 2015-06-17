@@ -28,6 +28,9 @@ Il est possible de passer des paramètres optionnels au runner :
 
 # Temps minimum en millisecondes entre deux crash pour que ceux-ci soient considérés comme "consécutifs"
 --minCrashDelay <timems>
+
+# Adresse email de l'expéditeur du mail
+--senderMail <email<
 ```
 
 __Détacher le processus du terminal__
